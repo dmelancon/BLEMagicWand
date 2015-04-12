@@ -55,21 +55,27 @@ var wandLogger = function(peripheral){
           console.log('connected to peripheral: ' + peripheral.uuid);
         //find specific "fff0" service which is my Pot Serivce
           wand.peripheral = peripheral;
-          peripheral.discoverServices(['fff1','fff4'], function(error, services) {
+          peripheral.discoverServices(['fff1','fff5'], function(error, services) {
               var lightControlService = services[0];
               var statusService = services[1];
               console.log('discovered LightControl and Status service');
-              lightControlService.discoverCharacteristics(['fff2','fff3'], function(error, characteristics) {
-                    var colorCharacteristic = characteristics[0];
-                    var onOffCharacteristic = characteristics[1];
-                    colorCharacteristic.on('read', function(data, isNotification) {
+              lightControlService.discoverCharacteristics(['fff2','fff3','fff4'], function(error, characteristics) {
+                    var briCharacteristic = characteristics[0];
+                    var hueCharacteristic = characteristics[1];
+                    var onOffCharacteristic = characteristics[2];
+                    briCharacteristic.on('read', function(data, isNotification) {
                       console.log('Hue is ', data.readUInt8(0));
-                      console.log('Brightness is ', data.readUInt8(1));
-                      wand.hue= data.readUInt8(0);
-                      wand.bri= data.readUInt8(1);
+                      wand.bri= data.readUInt8(0);
                     });
-                    colorCharacteristic.notify(true, function(error) {
+                    briCharacteristic.notify(true, function(error) {
                       console.log('Color notification on');
+                    });
+                    hueCharacteristic.on('read', function(data, isNotification) {
+                      console.log('Bri is ', data.readUInt8(0));
+                      wand.hue= data.readUInt8(0);
+                    });
+                    hueCharacteristic.notify(true, function(error) {
+                      console.log('Hue notification on');
                     });
                     onOffCharacteristic.on('read', function(data, isNotification) {
                       console.log('OnOff: ', data.readUInt8(0));
@@ -79,7 +85,7 @@ var wandLogger = function(peripheral){
                       console.log('OnOff notification on');
                     });
               }); 
-              statusService.discoverCharacteristics(['fff5'], function(error, characteristics) {
+              statusService.discoverCharacteristics(['fff6'], function(error, characteristics) {
                   var statusCharacteristic = characteristics[0];
                    statusCharacteristic.on('read', function(data, isNotification) {
                       console.log('Status is: ', data.readUInt8(0));
