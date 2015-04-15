@@ -81,21 +81,11 @@ var doIt = function(){
 }
 var doIt2 = function(){
   if (light.peripheral && wand.peripheral){
-    // console.log("are we hooked up? ya, we're hooked up.");
-    if (light.status == 1){ 
-       // if (wand.status == 0 ){ // really if light.status changes from 1 to 0
           var tempBuffer = new Buffer(1);
-          tempBuffer.writeUInt8(d2h(1),0);
+          tempBuffer.writeUInt8(d2h(light.status),0);
           wand.peripheral.statusService.statusCharacteristic.write(tempBuffer, false, function(error) {
             console.log("writing wand status");
             });
-    }else{
-      var tempBuffer = new Buffer(1);
-          tempBuffer.writeUInt8(d2h(0),0);
-          wand.peripheral.statusService.statusCharacteristic.write(tempBuffer, false, function(error) {
-            console.log("writing wand status");
-          });
-    }
   }
 }
 
@@ -130,7 +120,7 @@ var wandLogger = function(peripheral){
                     var hueCharacteristic = characteristics[1];
                     var onOffCharacteristic = characteristics[2];
                     briCharacteristic.on('read', function(data, isNotification) {
-                      console.log('Hue is ', data.readUInt8(0));
+                      console.log('Bri is ', data.readUInt8(0));
                       wand.brightness= data.readUInt8(0);
                       doIt();
                     });
@@ -138,7 +128,7 @@ var wandLogger = function(peripheral){
                       console.log('Color notification on');
                     });
                     hueCharacteristic.on('read', function(data, isNotification) {
-                      console.log('Bri is ', data.readUInt8(0));
+                      console.log('Hue is ', data.readUInt8(0));
                       wand.hue= data.readUInt8(0);
                        doIt();
                     });
