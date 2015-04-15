@@ -32,7 +32,7 @@ var light = {
   hue: 0,
   bightness: 0,
   onOff: 0,
-  status: 1
+  status: 0
 }
 
 var wand = {
@@ -48,7 +48,7 @@ function d2h(d) { return "0x"+ (+d).toString(16).toUpperCase(); }
 var doIt = function(){
   if (light.peripheral && wand.peripheral){
     // console.log("are we hooked up? ya, we're hooked up.");
-    if (light.status = 1){   //light.status gets set from laser triggering photo resistor
+    if (light.status == 1){   //light.status gets set from laser triggering photo resistor
         // // write wand.status = 1; // wand buzzes  //SYNC is DONE
         // tempBuffer = new Buffer([1]);
         // wand.peripheral.statusService.statusCharacteristic.write(tempBuffer, false, function(error) {
@@ -69,16 +69,36 @@ var doIt = function(){
             // console.log(hueBuffer);
           });
         // set timeout on wand if no new values are sent/. timeout.sends disconnectmessage. aka stat
-
+      if (wand.status == 0 ){ // really if light.status changes from 1 to 0
+          var tempBuffer = new Buffer(1);
+          tempBuffer.writeUInt8(d2h(1),0);
+          wand.peripheral.statusService.statusCharacteristic.write(tempBuffer, false, function(error) {
+            // console.log(hueBuffer);
+        });
     }
-    // if (wand.status = 0 ){ // really if light.status changes from 1 to 0
-    //     //write light.status = 0, connections is severed
-    //     wand.hue = 0;
-    //     wand.brightness = 0;
-    // }
-
+    }
   }
 }
+var doIt2 = function(){
+  if (light.peripheral && wand.peripheral){
+    // console.log("are we hooked up? ya, we're hooked up.");
+    if (light.status == 1){ 
+       // if (wand.status == 0 ){ // really if light.status changes from 1 to 0
+          var tempBuffer = new Buffer(1);
+          tempBuffer.writeUInt8(d2h(1),0);
+          wand.peripheral.statusService.statusCharacteristic.write(tempBuffer, false, function(error) {
+            console.log("writing wand status");
+            });
+    }else{
+      var tempBuffer = new Buffer(1);
+          tempBuffer.writeUInt8(d2h(0),0);
+          wand.peripheral.statusService.statusCharacteristic.write(tempBuffer, false, function(error) {
+            console.log("writing wand status");
+          });
+    }
+  }
+}
+
 // // app.get('/data', function(req, res){
 //   res.send(JSON.stringify(data));
 //   res.end();
@@ -133,8 +153,11 @@ var wandLogger = function(peripheral){
                       console.log('OnOff notification on');
                     });
               }); 
+        wand.peripheral.statusService = statusService;
               statusService.discoverCharacteristics(['fff6'], function(error, characteristics) {
                   var statusCharacteristic = characteristics[0];
+                    wand.peripheral.statusService.statusCharacteristic = statusCharacteristic;
+
                    statusCharacteristic.on('read', function(data, isNotification) {
                       console.log('Status is: ', data.readUInt8(0));
                       wand.status = data.readUInt8(0);
@@ -183,7 +206,8 @@ var lightLogger = function(peripheral){
                   var statusCharacteristic = characteristics[0];
                    statusCharacteristic.on('read', function(data, isNotification) {
                       console.log('Status is: ', data.readUInt8(0));
-                      wand.status = data.readUInt8(0);
+                      light.status = data.readUInt8(0);
+                      doIt2();
                   });
                      statusCharacteristic.notify(true, function(error) {
                       console.log('Status notification on');
